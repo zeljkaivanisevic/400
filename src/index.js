@@ -13,26 +13,22 @@ app.use(express.json()) // automatski dekodiraj JSON poruke
 /* čitanje postova iz MongoDB */
 /* čitanje postova iz MongoDB uz pretragu i filtriranje */
 
-
-
+async function dohvati(posts, stranica, velicina) {
+    let brojslika = velicina * (stranica -1)
+    let db = await connect()
+    let cursor = await db.collection(posts).find().limit(velicina).skip(brojslika)
+    let respone = await cursor.toArray()
+    return respone
+}
 
 app.get('/posts', async (req, res) => {
-    let query = req.query
-    let filter = {}
-    if (query.createdBy) {
-    filter["createdBy"] = new RegExp('^' + query.createdBy) 
-    }
-    console.log("Filter za Mongo", filter)
-    let db = await connect()
-    let cursor = await db.collection("posts").find(filter).sort({postedAt: -1})
-    let results = await cursor.toArray()
-    // Premještanje atributa _id u id
-    results.forEach(e => {
-    e.id = e._id
-    delete e._id
-    })
-    res.json(results)
-   })
+    let response = await dohvati('posts', 5, 10)
+
+    res.json(response)
+})
+
+
+
 
 
 
