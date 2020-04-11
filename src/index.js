@@ -17,21 +17,23 @@ app.use(express.json()) // automatski dekodiraj JSON poruke
 
 
 app.get('/posts', async (req, res) => {
-    console.log(req.query);
-    var d = new Date();
-    let last6= d.setMonth(d.getMonth() - 6) //last 6 months
-    
+    let query = req.query
+    let filter = {}
+    if (query.createdBy) {
+    filter["createdBy"] = new RegExp('^' + query.createdBy) 
+    }
+    console.log("Filter za Mongo", filter)
     let db = await connect()
-    let cursor = await db.collection("posts").find({ postedAt: { $gte: last6.toString() } }).sort({postedAt: -1})
+    let cursor = await db.collection("posts").find(filter).sort({postedAt: -1})
     let results = await cursor.toArray()
-
+    // Premještanje atributa _id u id
     results.forEach(e => {
-        e.id = e._id
-        delete e._id
+    e.id = e._id
+    delete e._id
     })
-
     res.json(results)
-})
+   })
+
 
 
 
